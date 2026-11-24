@@ -77,6 +77,72 @@ public class Board {
 
         return true;
     }
+    public boolean canMove(Move move) {
+        Vehicle vehicle = getVehicle(move.vehicleId());
+
+        if (vehicle == null) {
+            return false;
+        }
+
+        int distance = move.distance();
+        int direction = distance > 0 ? 1 : -1;
+
+        int row = vehicle.row();
+        int column = vehicle.column();
+
+        if (vehicle.horizontal() && direction > 0) {
+            column += vehicle.length() - 1;
+        }
+
+        if (!vehicle.horizontal() && direction > 0) {
+            row += vehicle.length() - 1;
+        }
+
+        while (distance != 0) {
+            if (vehicle.horizontal()) {
+                column += direction;
+            } else {
+                row += direction;
+            }
+
+            if (!isInside(row, column) || !isEmpty(row, column)) {
+                return false;
+            }
+
+            distance -= direction;
+        }
+
+        return true;
+    }
+
+    public boolean applyMove(Move move) {
+        if (!canMove(move)) {
+            return false;
+        }
+
+        Vehicle vehicle = getVehicle(move.vehicleId());
+        int index = vehicles.indexOf(vehicle);
+
+        vehicles.set(index, vehicle.move(move.distance()));
+
+        return true;
+    }
+
+    public List<Move> getPossibleMoves(char vehicleId) {
+        List<Move> moves = new ArrayList<>();
+
+        for (int direction = -1; direction <= 1; direction += 2) {
+            int distance = direction;
+
+            while (canMove(new Move(vehicleId, distance))) {
+                moves.add(new Move(vehicleId, distance));
+                distance += direction;
+            }
+        }
+
+        return moves;
+    }
+
 
     public void printBoard() {
         char[][] grid = new char[rows][columns];
