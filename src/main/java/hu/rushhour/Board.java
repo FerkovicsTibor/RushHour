@@ -8,6 +8,7 @@ public class Board {
     private final int rows;
     private final int columns;
     private final List<Vehicle> vehicles;
+    private char winner = '\0';
 
     public Board(int rows, int columns) {
         if (rows <= 0 || columns <= 0) {
@@ -77,11 +78,20 @@ public class Board {
 
         return true;
     }
+
     public boolean canMove(Move move) {
+        if (isGameOver()) {
+            return false;
+        }
+
         Vehicle vehicle = getVehicle(move.vehicleId());
 
         if (vehicle == null) {
             return false;
+        }
+
+        if (canExit(move)) {
+            return true;
         }
 
         int distance = move.distance();
@@ -121,8 +131,14 @@ public class Board {
         }
 
         Vehicle vehicle = getVehicle(move.vehicleId());
-        int index = vehicles.indexOf(vehicle);
 
+        if (canExit(move)) {
+            winner = vehicle.id();
+            vehicles.remove(vehicle);
+            return true;
+        }
+
+        int index = vehicles.indexOf(vehicle);
         vehicles.set(index, vehicle.move(move.distance()));
 
         return true;
@@ -131,18 +147,91 @@ public class Board {
     public List<Move> getPossibleMoves(char vehicleId) {
         List<Move> moves = new ArrayList<>();
 
+        Vehicle vehicle = getVehicle(vehicleId);
+
+        if (vehicle == null || isGameOver()) {
+            return moves;
+        }
+
         for (int direction = -1; direction <= 1; direction += 2) {
             int distance = direction;
 
             while (canMove(new Move(vehicleId, distance))) {
-                moves.add(new Move(vehicleId, distance));
+                Move move = new Move(vehicleId, distance);
+                moves.add(move);
+
+                if (canExit(move)) {
+                    break;
+                }
+
                 distance += direction;
+            }
+        }
+
+        if (vehicle.horizontal()) {
+            Move exitMove = null;
+
+            if (vehicle.id() == 'A') {
+                exitMove = new Move('A', columns - vehicle.column());
+            } else if (vehicle.id() == 'B') {
+                exitMove = new Move('B',
+                        -vehicle.column() - vehicle.length());
+            }
+
+            if (exitMove != null && canExit(exitMove)
+                    && !moves.contains(exitMove)) {
+                moves.add(exitMove);
             }
         }
 
         return moves;
     }
 
+    public boolean canExit(Move move) {
+        Vehicle vehicle = getVehicle(move.vehicleId());
+
+        if (vehicle == null || !vehicle.horizontal()) {
+            return false;
+        }
+
+        if (vehicle.id() == 'A'
+                && move.distance() == columns - vehicle.column()) {
+
+            for (int column = vehicle.column() + vehicle.length();
+                 column < columns; column++) {
+
+                if (!isEmpty(vehicle.row(), column)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        if (vehicle.id() == 'B'
+                && move.distance() == -vehicle.column() - vehicle.length()) {
+
+            for (int column = vehicle.column() - 1;
+                 column >= 0; column--) {
+
+                if (!isEmpty(vehicle.row(), column)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isGameOver() {
+        return winner != '\0';
+    }
+
+    public char getWinner() {
+        return winner;
+    }
 
     public void printBoard() {
         char[][] grid = new char[rows][columns];
