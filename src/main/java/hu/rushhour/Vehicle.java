@@ -9,7 +9,7 @@ public record Vehicle(
 ) {
 
     public Vehicle {
-        if (length < 1) {
+        if (length < 2) {
             throw new IllegalArgumentException("Érvénytelen járműhossz!");
         }
 
