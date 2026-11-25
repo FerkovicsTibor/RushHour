@@ -2,6 +2,7 @@ package hu.rushhour;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -27,6 +28,38 @@ public class DatabaseManager {
              Statement statement = connection.createStatement()) {
 
             statement.execute(sql);
+        }
+    }
+
+    public void registerPlayer(String name) throws SQLException {
+        String sql = """
+        INSERT INTO players (name, wins)
+        VALUES (?, 0)
+        ON CONFLICT(name) DO NOTHING
+        """;
+
+        try (Connection connection = connect();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, name);
+            statement.executeUpdate();
+        }
+    }
+
+    public void addWin(String name) throws SQLException {
+        String sql = """
+        UPDATE players
+        SET wins = wins + 1
+        WHERE name = ?
+        """;
+
+        try (Connection connection = connect();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, name);
+            statement.executeUpdate();
         }
     }
 }

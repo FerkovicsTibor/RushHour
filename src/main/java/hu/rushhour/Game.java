@@ -1,6 +1,7 @@
 package hu.rushhour;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Game {
@@ -8,9 +9,18 @@ public class Game {
     private final Scanner scanner = new Scanner(System.in);
     private final ComputerPlayer computer = new ComputerPlayer();
     private final FileManager fileManager = new FileManager();
+    private final DatabaseManager databaseManager = new DatabaseManager();
+
+    private String playerName;
 
     public void start() {
         System.out.println("Üdvözöllek a Rush Hour játékban!");
+
+        if (!registerPlayer()) {
+            return;
+        }
+
+        System.out.println("Szia, " + playerName + "!");
 
         while (true) {
             System.out.println("\n===== RUSH HOUR =====");
@@ -32,6 +42,27 @@ public class Game {
                 }
                 default -> System.out.println("Érvénytelen menüpont!");
             }
+        }
+    }
+
+    private boolean registerPlayer() {
+        do {
+            System.out.print("Add meg a játékosneved: ");
+            playerName = scanner.nextLine().trim();
+
+            if (playerName.isEmpty()) {
+                System.out.println("A játékosnév nem lehet üres!");
+            }
+
+        } while (playerName.isEmpty());
+
+        try {
+            databaseManager.registerPlayer(playerName);
+            return true;
+
+        } catch (SQLException e) {
+            System.out.println("Adatbázishiba: " + e.getMessage());
+            return false;
         }
     }
 
@@ -112,9 +143,20 @@ public class Game {
         board.printBoard();
 
         if (board.getWinner() == 'A') {
-            System.out.println("Gratulálok, nyertél!");
+            System.out.println("Gratulálok, " + playerName + ", nyertél!");
+            recordWin();
         } else {
             System.out.println("A számítógép nyert!");
+        }
+    }
+
+    private void recordWin() {
+        try {
+            databaseManager.addWin(playerName);
+            System.out.println("A győzelmed bekerült az adatbázisba!");
+
+        } catch (SQLException e) {
+            System.out.println("Adatbázishiba: " + e.getMessage());
         }
     }
 
