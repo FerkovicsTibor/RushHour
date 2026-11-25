@@ -1,11 +1,13 @@
 package hu.rushhour;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Game {
 
     private final Scanner scanner = new Scanner(System.in);
     private final ComputerPlayer computer = new ComputerPlayer();
+    private final FileManager fileManager = new FileManager();
 
     public void start() {
         System.out.println("Üdvözöllek a Rush Hour játékban!");
@@ -13,19 +15,41 @@ public class Game {
         while (true) {
             System.out.println("\n===== RUSH HOUR =====");
             System.out.println("1. Új játék");
-            System.out.println("2. Kilépés");
+            System.out.println("2. Pálya betöltése fájlból");
+            System.out.println("3. Kilépés");
             System.out.print("Válassz menüpontot: ");
 
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
-                case "1" -> play(createDefaultBoard());
-                case "2" -> {
+                case "1" -> loadAndPlay(true);
+                case "2" -> loadAndPlay(false);
+                case "3" -> {
                     System.out.println("Viszlát!");
                     return;
                 }
                 default -> System.out.println("Érvénytelen menüpont!");
             }
+        }
+    }
+
+    private void loadAndPlay(boolean defaultBoard) {
+        try {
+            Board board;
+
+            if (defaultBoard) {
+                board = fileManager.loadDefaultBoard();
+            } else {
+                System.out.print("Add meg a pályafájl elérési útját: ");
+                String fileName = scanner.nextLine().trim();
+
+                board = fileManager.loadBoard(fileName);
+            }
+
+            play(board);
+
+        } catch (IOException | IllegalArgumentException e) {
+            System.out.println("Betöltési hiba: " + e.getMessage());
         }
     }
 
@@ -108,20 +132,5 @@ public class Game {
                 System.out.println("Érvénytelen bemenet!");
             }
         }
-    }
-
-    private Board createDefaultBoard() {
-        Board board = new Board(6, 12);
-
-        board.addVehicle(new Vehicle('A', 2, 1, 2, true));
-        board.addVehicle(new Vehicle('B', 3, 9, 2, true));
-        board.addVehicle(new Vehicle('C', 0, 4, 3, false));
-        board.addVehicle(new Vehicle('D', 2, 7, 3, false));
-        board.addVehicle(new Vehicle('E', 0, 8, 2, true));
-        board.addVehicle(new Vehicle('F', 3, 2, 3, false));
-        board.addVehicle(new Vehicle('G', 5, 5, 3, true));
-        board.addVehicle(new Vehicle('H', 0, 0, 2, false));
-
-        return board;
     }
 }

@@ -1,11 +1,29 @@
 package hu.rushhour;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 public class FileManager {
+
+    public Board loadDefaultBoard() throws IOException {
+        InputStream stream = getClass().getResourceAsStream("/board.txt");
+
+        if (stream == null) {
+            throw new IOException("Nem található az alapértelmezett pályafájl!");
+        }
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+
+            return parseBoard(reader.lines().toList());
+        }
+    }
 
     public Board loadBoard(String fileName) throws IOException {
         List<String> lines = Files.readAllLines(Path.of(fileName));
