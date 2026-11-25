@@ -105,7 +105,8 @@ public class Game {
 
     private boolean playerTurn(Board board) {
         while (true) {
-            System.out.print("Add meg a lépésed (pl. A 1, vagy exit): ");
+            System.out.print(
+                    "Add meg a lépésed (A 1, save név, exit): ");
 
             String line = scanner.nextLine().trim();
 
@@ -114,6 +115,16 @@ public class Game {
             }
 
             String[] input = line.split("\\s+");
+
+            if (input[0].equalsIgnoreCase("save")) {
+                if (input.length != 2) {
+                    System.out.println("Használat: save név");
+                } else {
+                    saveGame(board, input[1]);
+                }
+
+                continue;
+            }
 
             try {
                 if (input.length != 2 || input[0].length() != 1) {
@@ -131,6 +142,18 @@ public class Game {
             } catch (IllegalArgumentException e) {
                 System.out.println("Érvénytelen bemenet!");
             }
+        }
+    }
+
+    private void saveGame(Board board, String name) {
+        try {
+            fileManager.saveGame(board, name, 'A');
+
+            System.out.println("Játék sikeresen elmentve: "
+                    + name + ".txt");
+
+        } catch (IOException | IllegalArgumentException e) {
+            System.out.println("Mentési hiba: " + e.getMessage());
         }
     }
 }

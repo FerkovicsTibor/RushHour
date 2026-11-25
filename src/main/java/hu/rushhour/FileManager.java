@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FileManager {
@@ -86,5 +87,35 @@ public class FileManager {
         }
 
         return board;
+    }
+
+    public void saveGame(Board board, String name, char currentPlayer)
+            throws IOException {
+
+        if (!name.matches("[a-zA-Z0-9_-]+")) {
+            throw new IllegalArgumentException("Érvénytelen mentési név!");
+        }
+
+        if (currentPlayer != 'A' && currentPlayer != 'B') {
+            throw new IllegalArgumentException("Érvénytelen játékos!");
+        }
+
+        Path directory = Path.of("saves");
+        Files.createDirectories(directory);
+
+        List<String> lines = new ArrayList<>();
+
+        lines.add("TURN " + currentPlayer);
+        lines.add(board.getRows() + " " + board.getColumns());
+
+        for (Vehicle vehicle : board.getVehicles()) {
+            lines.add(vehicle.id() + " "
+                    + (vehicle.row() + 1) + " "
+                    + (vehicle.column() + 1) + " "
+                    + vehicle.length() + " "
+                    + (vehicle.horizontal() ? "H" : "V"));
+        }
+
+        Files.write(directory.resolve(name + ".txt"), lines);
     }
 }
