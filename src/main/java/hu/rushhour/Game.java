@@ -16,7 +16,8 @@ public class Game {
             System.out.println("\n===== RUSH HOUR =====");
             System.out.println("1. Új játék");
             System.out.println("2. Pálya betöltése fájlból");
-            System.out.println("3. Kilépés");
+            System.out.println("3. Mentett játék folytatása");
+            System.out.println("4. Kilépés");
             System.out.print("Válassz menüpontot: ");
 
             String choice = scanner.nextLine().trim();
@@ -24,7 +25,8 @@ public class Game {
             switch (choice) {
                 case "1" -> loadAndPlay(true);
                 case "2" -> loadAndPlay(false);
-                case "3" -> {
+                case "3" -> loadSavedGame();
+                case "4" -> {
                     System.out.println("Viszlát!");
                     return;
                 }
@@ -46,14 +48,30 @@ public class Game {
                 board = fileManager.loadBoard(fileName);
             }
 
-            play(board);
+            play(board, 'A');
 
         } catch (IOException | IllegalArgumentException e) {
             System.out.println("Betöltési hiba: " + e.getMessage());
         }
     }
 
-    private void play(Board board) {
+    private void loadSavedGame() {
+        System.out.print("Add meg a mentés nevét: ");
+        String name = scanner.nextLine().trim();
+
+        try {
+            SavedGame savedGame = fileManager.loadGame(name);
+
+            System.out.println("Játék sikeresen betöltve!");
+
+            play(savedGame.board(), savedGame.currentPlayer());
+
+        } catch (IOException | IllegalArgumentException e) {
+            System.out.println("Betöltési hiba: " + e.getMessage());
+        }
+    }
+
+    private void play(Board board, char currentPlayer) {
         while (!board.isGameOver()) {
             board.printBoard();
 
@@ -62,26 +80,33 @@ public class Game {
                 return;
             }
 
-            if (!playerTurn(board)) {
-                return;
+            if (currentPlayer == 'A') {
+                System.out.println("Te következel!");
+
+                if (!playerTurn(board)) {
+                    return;
+                }
+
+                currentPlayer = 'B';
+
+            } else {
+                System.out.println("A számítógép következik!");
+
+                Move computerMove = computer.chooseMove(board);
+
+                if (computerMove == null) {
+                    System.out.println("Nincs több szabályos lépés!");
+                    return;
+                }
+
+                board.applyMove(computerMove);
+
+                System.out.println("A gép lépése: "
+                        + computerMove.vehicleId() + " "
+                        + computerMove.distance());
+
+                currentPlayer = 'A';
             }
-
-            if (board.isGameOver()) {
-                break;
-            }
-
-            Move computerMove = computer.chooseMove(board);
-
-            if (computerMove == null) {
-                System.out.println("Nincs több szabályos lépés!");
-                return;
-            }
-
-            board.applyMove(computerMove);
-
-            System.out.println("A gép lépése: "
-                    + computerMove.vehicleId() + " "
-                    + computerMove.distance());
         }
 
         board.printBoard();

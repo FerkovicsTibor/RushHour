@@ -92,9 +92,7 @@ public class FileManager {
     public void saveGame(Board board, String name, char currentPlayer)
             throws IOException {
 
-        if (!name.matches("[a-zA-Z0-9_-]+")) {
-            throw new IllegalArgumentException("Érvénytelen mentési név!");
-        }
+        validateSaveName(name);
 
         if (currentPlayer != 'A' && currentPlayer != 'B') {
             throw new IllegalArgumentException("Érvénytelen játékos!");
@@ -117,5 +115,34 @@ public class FileManager {
         }
 
         Files.write(directory.resolve(name + ".txt"), lines);
+    }
+
+    public SavedGame loadGame(String name) throws IOException {
+        validateSaveName(name);
+
+        Path path = Path.of("saves", name + ".txt");
+        List<String> lines = Files.readAllLines(path);
+
+        if (lines.size() < 2) {
+            throw new IllegalArgumentException("Érvénytelen mentési fájl!");
+        }
+
+        String[] turn = lines.get(0).trim().split("\\s+");
+
+        if (turn.length != 2 || !turn[0].equals("TURN")
+                || (!turn[1].equals("A") && !turn[1].equals("B"))) {
+            throw new IllegalArgumentException("Érvénytelen játékossorrend!");
+        }
+
+        char currentPlayer = turn[1].charAt(0);
+        Board board = parseBoard(lines.subList(1, lines.size()));
+
+        return new SavedGame(board, currentPlayer);
+    }
+
+    private void validateSaveName(String name) {
+        if (!name.matches("[a-zA-Z0-9_-]+")) {
+            throw new IllegalArgumentException("Érvénytelen mentési név!");
+        }
     }
 }
