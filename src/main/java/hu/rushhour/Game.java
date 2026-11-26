@@ -12,12 +12,28 @@ public class Game {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(Game.class);
 
-    private final Scanner scanner = new Scanner(System.in);
-    private final ComputerPlayer computer = new ComputerPlayer();
-    private final FileManager fileManager = new FileManager();
-    private final DatabaseManager databaseManager = new DatabaseManager();
+    private final Scanner scanner;
+    private final ComputerPlayer computer;
+    private final FileManager fileManager;
+    private final DatabaseManager databaseManager;
 
     private String playerName;
+
+    public Game() {
+        this(new Scanner(System.in),
+                new ComputerPlayer(),
+                new FileManager(),
+                new DatabaseManager());
+    }
+
+    public Game(Scanner scanner, ComputerPlayer computer,
+                FileManager fileManager, DatabaseManager databaseManager) {
+
+        this.scanner = scanner;
+        this.computer = computer;
+        this.fileManager = fileManager;
+        this.databaseManager = databaseManager;
+    }
 
     public void start() {
         System.out.println("Üdvözöllek a Rush Hour játékban!");

@@ -14,8 +14,18 @@ public class DatabaseManager {
     private static final String DATABASE_URL =
             "jdbc:sqlite:rushhour.db";
 
+    private final String databaseUrl;
+
+    public DatabaseManager() {
+        this(DATABASE_URL);
+    }
+
+    public DatabaseManager(String databaseUrl) {
+        this.databaseUrl = databaseUrl;
+    }
+
     public Connection connect() throws SQLException {
-        return DriverManager.getConnection(DATABASE_URL);
+        return DriverManager.getConnection(databaseUrl);
     }
 
     public void initialize() throws SQLException {
@@ -89,4 +99,3 @@ public class DatabaseManager {
         return List.copyOf(scores);
     }
 }
-

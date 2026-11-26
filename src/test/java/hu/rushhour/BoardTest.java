@@ -128,4 +128,83 @@ class BoardTest {
         assertThrows(UnsupportedOperationException.class,
                 () -> board.getVehicles().clear());
     }
+    @Test
+    void rejectsDuplicateVehicle() {
+        assertThrows(IllegalArgumentException.class,
+                () -> board.addVehicle(
+                        new Vehicle('A', 0, 0, 2, true)));
+    }
+
+    @Test
+    void rejectsOverlappingVehicle() {
+        assertThrows(IllegalArgumentException.class,
+                () -> board.addVehicle(
+                        new Vehicle('C', 2, 1, 2, true)));
+    }
+
+    @Test
+    void rejectsVehicleOutsideBoard() {
+        assertThrows(IllegalArgumentException.class,
+                () -> board.addVehicle(
+                        new Vehicle('C', 0, 11, 2, true)));
+    }
+
+    @Test
+    void rejectsVerticalVehicleOutsideBoard() {
+        assertThrows(IllegalArgumentException.class,
+                () -> board.addVehicle(
+                        new Vehicle('C', 5, 0, 2, false)));
+    }
+
+    @Test
+    void movesVehicleLeft() {
+        assertTrue(board.applyMove(new Move('A', -1)));
+        assertEquals(0, board.getVehicle('A').column());
+    }
+
+    @Test
+    void movesVerticalVehicleUp() {
+        board.addVehicle(new Vehicle('C', 3, 4, 2, false));
+
+        assertTrue(board.applyMove(new Move('C', -2)));
+        assertEquals(1, board.getVehicle('C').row());
+    }
+
+    @Test
+    void rejectsBlockedComputerExit() {
+        board.addVehicle(new Vehicle('C', 2, 5, 3, false));
+
+        assertFalse(board.canMove(new Move('B', -11)));
+    }
+
+    @Test
+    void includesPlayerExitInPossibleMoves() {
+        assertTrue(board.getPossibleMoves('A')
+                .contains(new Move('A', 11)));
+    }
+
+    @Test
+    void includesComputerExitInPossibleMoves() {
+        assertTrue(board.getPossibleMoves('B')
+                .contains(new Move('B', -11)));
+    }
+
+    @Test
+    void printsBoard() {
+        assertDoesNotThrow(() -> board.printBoard());
+    }
+
+    @Test
+    void gameIsNotOverInitially() {
+        assertFalse(board.isGameOver());
+        assertEquals('\0', board.getWinner());
+    }
+
+    @Test
+    void removesWinningVehicle() {
+        board.applyMove(new Move('A', 11));
+
+        assertNull(board.getVehicle('A'));
+    }
+
 }
