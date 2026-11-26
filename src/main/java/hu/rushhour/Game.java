@@ -4,8 +4,13 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Game {
+
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(Game.class);
 
     private final Scanner scanner = new Scanner(System.in);
     private final ComputerPlayer computer = new ComputerPlayer();
@@ -61,9 +66,11 @@ public class Game {
 
         try {
             databaseManager.registerPlayer(playerName);
+            LOGGER.info("Bejelentkezett játékos: {}", playerName);
             return true;
 
         } catch (SQLException e) {
+            LOGGER.error("Játékos regisztrációs hiba.", e);
             System.out.println("Adatbázishiba: " + e.getMessage());
             return false;
         }
@@ -72,6 +79,8 @@ public class Game {
     private void showLeaderboard() {
         try {
             List<PlayerScore> scores = databaseManager.getLeaderboard();
+
+            LOGGER.info("Ranglista lekérdezése.");
 
             System.out.println("\n===== RANGLISTA =====");
 
@@ -93,6 +102,7 @@ public class Game {
             }
 
         } catch (SQLException e) {
+            LOGGER.error("Ranglista lekérdezési hiba.", e);
             System.out.println("Adatbázishiba: " + e.getMessage());
         }
     }
@@ -103,16 +113,19 @@ public class Game {
 
             if (defaultBoard) {
                 board = fileManager.loadDefaultBoard();
+                LOGGER.info("Alapértelmezett pálya betöltve.");
             } else {
                 System.out.print("Add meg a pályafájl elérési útját: ");
                 String fileName = scanner.nextLine().trim();
 
                 board = fileManager.loadBoard(fileName);
+                LOGGER.info("Külső pálya betöltve: {}", fileName);
             }
 
             play(board, 'A');
 
         } catch (IOException | IllegalArgumentException e) {
+            LOGGER.warn("Pályabetöltési hiba.", e);
             System.out.println("Betöltési hiba: " + e.getMessage());
         }
     }
@@ -124,20 +137,26 @@ public class Game {
         try {
             SavedGame savedGame = fileManager.loadGame(name);
 
+            LOGGER.info("Mentett játék betöltve: {}", name);
             System.out.println("Játék sikeresen betöltve!");
 
             play(savedGame.board(), savedGame.currentPlayer());
 
         } catch (IOException | IllegalArgumentException e) {
+            LOGGER.warn("Mentett játék betöltési hibája.", e);
             System.out.println("Betöltési hiba: " + e.getMessage());
         }
     }
 
     private void play(Board board, char currentPlayer) {
+        LOGGER.info("Játék indítása. Következő játékos: {}",
+                currentPlayer);
+
         while (!board.isGameOver()) {
             board.printBoard();
 
             if (!hasPossibleMoves(board)) {
+                LOGGER.info("Nincs több szabályos lépés.");
                 System.out.println("Nincs több szabályos lépés!");
                 return;
             }
@@ -146,6 +165,7 @@ public class Game {
                 System.out.println("Te következel!");
 
                 if (!playerTurn(board)) {
+                    LOGGER.info("A játékos visszatért a főmenübe.");
                     return;
                 }
 
@@ -157,11 +177,15 @@ public class Game {
                 Move computerMove = computer.chooseMove(board);
 
                 if (computerMove == null) {
+                    LOGGER.info("A számítógép nem tud lépni.");
                     System.out.println("Nincs több szabályos lépés!");
                     return;
                 }
 
                 board.applyMove(computerMove);
+
+                LOGGER.info("A számítógép lépése: {} {}",
+                        computerMove.vehicleId(), computerMove.distance());
 
                 System.out.println("A gép lépése: "
                         + computerMove.vehicleId() + " "
@@ -174,9 +198,11 @@ public class Game {
         board.printBoard();
 
         if (board.getWinner() == 'A') {
+            LOGGER.info("A játék győztese: {}", playerName);
             System.out.println("Gratulálok, " + playerName + ", nyertél!");
             recordWin();
         } else {
+            LOGGER.info("A számítógép nyert.");
             System.out.println("A számítógép nyert!");
         }
     }
@@ -184,9 +210,12 @@ public class Game {
     private void recordWin() {
         try {
             databaseManager.addWin(playerName);
+
+            LOGGER.info("Győzelem rögzítve: {}", playerName);
             System.out.println("A győzelmed bekerült az adatbázisba!");
 
         } catch (SQLException e) {
+            LOGGER.error("Győzelem rögzítési hiba.", e);
             System.out.println("Adatbázishiba: " + e.getMessage());
         }
     }
@@ -233,11 +262,15 @@ public class Game {
                 int distance = Integer.parseInt(input[1]);
 
                 if (board.applyMove(new Move(id, distance))) {
+                    LOGGER.info("Játékos lépése: {} {}", id, distance);
                     return true;
                 }
 
+                LOGGER.warn("Szabálytalan lépés: {} {}", id, distance);
                 System.out.println("Szabálytalan lépés!");
+
             } catch (IllegalArgumentException e) {
+                LOGGER.warn("Érvénytelen játékosbemenet.");
                 System.out.println("Érvénytelen bemenet!");
             }
         }
@@ -247,10 +280,13 @@ public class Game {
         try {
             fileManager.saveGame(board, name, 'A');
 
+            LOGGER.info("Játék elmentve: {}", name);
+
             System.out.println("Játék sikeresen elmentve: "
                     + name + ".txt");
 
         } catch (IOException | IllegalArgumentException e) {
+            LOGGER.warn("Játékmentési hiba.", e);
             System.out.println("Mentési hiba: " + e.getMessage());
         }
     }
