@@ -3,8 +3,11 @@ package hu.rushhour;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseManager {
 
@@ -62,4 +65,28 @@ public class DatabaseManager {
             statement.executeUpdate();
         }
     }
+
+    public List<PlayerScore> getLeaderboard() throws SQLException {
+        String sql = """
+        SELECT name, wins
+        FROM players
+        ORDER BY wins DESC, name ASC
+        """;
+
+        List<PlayerScore> scores = new ArrayList<>();
+
+        try (Connection connection = connect();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+
+            while (resultSet.next()) {
+                scores.add(new PlayerScore(
+                        resultSet.getString("name"),
+                        resultSet.getInt("wins")));
+            }
+        }
+
+        return List.copyOf(scores);
+    }
 }
+

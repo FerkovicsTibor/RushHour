@@ -2,6 +2,7 @@ package hu.rushhour;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Game {
@@ -27,7 +28,8 @@ public class Game {
             System.out.println("1. Új játék");
             System.out.println("2. Pálya betöltése fájlból");
             System.out.println("3. Mentett játék folytatása");
-            System.out.println("4. Kilépés");
+            System.out.println("4. Ranglista");
+            System.out.println("5. Kilépés");
             System.out.print("Válassz menüpontot: ");
 
             String choice = scanner.nextLine().trim();
@@ -36,7 +38,8 @@ public class Game {
                 case "1" -> loadAndPlay(true);
                 case "2" -> loadAndPlay(false);
                 case "3" -> loadSavedGame();
-                case "4" -> {
+                case "4" -> showLeaderboard();
+                case "5" -> {
                     System.out.println("Viszlát!");
                     return;
                 }
@@ -63,6 +66,34 @@ public class Game {
         } catch (SQLException e) {
             System.out.println("Adatbázishiba: " + e.getMessage());
             return false;
+        }
+    }
+
+    private void showLeaderboard() {
+        try {
+            List<PlayerScore> scores = databaseManager.getLeaderboard();
+
+            System.out.println("\n===== RANGLISTA =====");
+
+            if (scores.isEmpty()) {
+                System.out.println("Még nincsenek játékosok!");
+                return;
+            }
+
+            System.out.printf("%-8s %-20s %s%n",
+                    "Hely", "Játékos", "Győzelmek");
+
+            int position = 1;
+
+            for (PlayerScore score : scores) {
+                System.out.printf("%-8d %-20s %d%n",
+                        position, score.name(), score.wins());
+
+                position++;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Adatbázishiba: " + e.getMessage());
         }
     }
 
